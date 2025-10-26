@@ -33,6 +33,8 @@ require (
 	github.com/ethereum/c-kzg-4844/v2 v2.1.3 // indirect
 	github.com/ethereum/go-verkle v0.2.2 // indirect
 	github.com/getsentry/sentry-go v0.27.0 // indirect
+	github.com/go-chi/chi/v5 v5.2.3 // indirect
+	github.com/go-chi/cors v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/snappy v1.0.0 // indirect
