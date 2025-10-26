@@ -179,7 +179,8 @@ func (s *PebbleStorage) Compact(start, end []byte) error {
 
 // CompactAll performs full database compaction
 func (s *PebbleStorage) CompactAll() error {
-	return s.Compact(nil, nil)
+	// Use empty byte slices for full range compaction
+	return s.Compact([]byte{}, []byte{0xff, 0xff, 0xff, 0xff})
 }
 
 // Flush flushes pending writes to disk
