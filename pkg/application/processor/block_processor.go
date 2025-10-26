@@ -7,6 +7,7 @@ import (
 
 	"github.com/sage-x-project/blockchain-indexer/pkg/domain/models"
 	"github.com/sage-x-project/blockchain-indexer/pkg/domain/repository"
+	"github.com/sage-x-project/blockchain-indexer/pkg/infrastructure/event"
 	"github.com/sage-x-project/blockchain-indexer/pkg/infrastructure/logger"
 	"github.com/sage-x-project/blockchain-indexer/pkg/infrastructure/metrics"
 	"go.uber.org/zap"
@@ -17,6 +18,7 @@ type BlockProcessor struct {
 	blockRepo repository.BlockRepository
 	txRepo    repository.TransactionRepository
 	chainRepo repository.ChainRepository
+	eventBus  event.EventBus
 	logger    *logger.Logger
 	metrics   *metrics.Metrics
 }
@@ -26,6 +28,7 @@ func NewBlockProcessor(
 	blockRepo repository.BlockRepository,
 	txRepo repository.TransactionRepository,
 	chainRepo repository.ChainRepository,
+	eventBus event.EventBus,
 	logger *logger.Logger,
 	metrics *metrics.Metrics,
 ) *BlockProcessor {
@@ -33,6 +36,7 @@ func NewBlockProcessor(
 		blockRepo: blockRepo,
 		txRepo:    txRepo,
 		chainRepo: chainRepo,
+		eventBus:  eventBus,
 		logger:    logger,
 		metrics:   metrics,
 	}
@@ -103,6 +107,25 @@ func (p *BlockProcessor) ProcessBlock(ctx context.Context, block *models.Block) 
 		zap.Uint64("block_number", block.Number),
 		zap.Duration("duration", duration),
 	)
+
+	// Publish block indexed event
+	if p.eventBus != nil {
+		evt := event.NewEvent(event.EventTypeBlockIndexed, chainID, &event.BlockIndexedPayload{
+			Block:            block,
+			TransactionCount: len(block.Transactions),
+			ProcessingTime:   duration,
+		})
+		p.eventBus.PublishAsync(evt)
+
+		// Publish transaction indexed events
+		for _, tx := range block.Transactions {
+			txEvt := event.NewEvent(event.EventTypeTransactionIndexed, chainID, &event.TransactionIndexedPayload{
+				Transaction: tx,
+				BlockNumber: block.Number,
+			})
+			p.eventBus.PublishAsync(txEvt)
+		}
+	}
 
 	return nil
 }

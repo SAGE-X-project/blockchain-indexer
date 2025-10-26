@@ -9,6 +9,7 @@ import (
 	"github.com/sage-x-project/blockchain-indexer/pkg/domain/models"
 	"github.com/sage-x-project/blockchain-indexer/pkg/domain/repository"
 	"github.com/sage-x-project/blockchain-indexer/pkg/domain/service"
+	"github.com/sage-x-project/blockchain-indexer/pkg/infrastructure/event"
 	"github.com/sage-x-project/blockchain-indexer/pkg/infrastructure/logger"
 	"go.uber.org/zap"
 )
@@ -18,6 +19,7 @@ type GapRecovery struct {
 	adapter   service.ChainAdapter
 	blockRepo repository.BlockRepository
 	processor *processor.BlockProcessor
+	eventBus  event.EventBus
 	logger    *logger.Logger
 }
 
@@ -26,12 +28,14 @@ func NewGapRecovery(
 	adapter service.ChainAdapter,
 	blockRepo repository.BlockRepository,
 	processor *processor.BlockProcessor,
+	eventBus event.EventBus,
 	logger *logger.Logger,
 ) *GapRecovery {
 	return &GapRecovery{
 		adapter:   adapter,
 		blockRepo: blockRepo,
 		processor: processor,
+		eventBus:  eventBus,
 		logger:    logger,
 	}
 }
@@ -102,6 +106,19 @@ func (g *GapRecovery) DetectGaps(ctx context.Context, chainID string) ([]*Gap, e
 			zap.String("chain_id", chainID),
 			zap.Int("gap_count", len(gaps)),
 		)
+
+		// Publish gap detected events
+		if g.eventBus != nil {
+			for _, gap := range gaps {
+				evt := event.NewEvent(event.EventTypeGapDetected, chainID, &event.GapPayload{
+					ChainID:    gap.ChainID,
+					StartBlock: gap.StartBlock,
+					EndBlock:   gap.EndBlock,
+					Size:       gap.Size,
+				})
+				g.eventBus.PublishAsync(evt)
+			}
+		}
 	}
 
 	return gaps, nil
@@ -179,6 +196,17 @@ func (g *GapRecovery) RecoverGap(ctx context.Context, gap *Gap) error {
 		zap.Uint64("end", gap.EndBlock),
 		zap.Int("blocks_recovered", len(blocks)),
 	)
+
+	// Publish gap recovered event
+	if g.eventBus != nil {
+		evt := event.NewEvent(event.EventTypeGapRecovered, gap.ChainID, &event.GapPayload{
+			ChainID:    gap.ChainID,
+			StartBlock: gap.StartBlock,
+			EndBlock:   gap.EndBlock,
+			Size:       gap.Size,
+		})
+		g.eventBus.PublishAsync(evt)
+	}
 
 	return nil
 }
