@@ -1,0 +1,137 @@
+# Cosmos Chain Indexer Configuration
+
+# Storage configuration
+storage:
+  type: pebble
+  path: ./data/pebble
+
+# Chain configuration
+chains:
+  - chain_id: "cosmoshub-4"
+    chain_name: "Cosmos Hub"
+    network: "mainnet"
+    chain_type: "cosmos"
+
+    # Tendermint RPC endpoint
+    rpc_url: "https://rpc.cosmos.network:443"
+
+    # Cosmos REST API endpoint (optional)
+    rest_url: "https://api.cosmos.network"
+
+    # gRPC endpoint (optional)
+    grpc_endpoint: "grpc.cosmos.network:9090"
+
+    # Connection settings
+    timeout: 30s
+    retry_attempts: 3
+    retry_delay: 1s
+    max_connections: 10
+
+    # Indexing settings
+    batch_size: 100
+    start_block: 0
+
+    # WebSocket settings (optional)
+    enable_websocket: false
+    websocket_url: "wss://rpc.cosmos.network/websocket"
+
+    # Cosmos-specific settings
+    bech32_prefix: "cosmos"
+    coin_denom: "uatom"
+
+    # Event settings
+    include_tx_events: true
+    include_begin_block_events: false
+    include_end_block_events: false
+
+# Server configuration
+server:
+  host: "0.0.0.0"
+  http_port: 8080
+  grpc_port: 50051
+
+  # TLS configuration (optional)
+  tls:
+    enabled: false
+    cert_file: ""
+    key_file: ""
+
+# Logging configuration
+logging:
+  level: "info"
+  format: "json"
+  output: "stdout"
+
+# Metrics configuration
+metrics:
+  enabled: true
+  host: "0.0.0.0"
+  port: 9091
+  path: "/metrics"
+
+# Event bus configuration
+event_bus:
+  queue_size: 10000
+  workers: 10
+  retry_attempts: 3
+  retry_delay: 1s
+
+# ================================
+# Alternative Cosmos Chain Examples
+# ================================
+
+# Osmosis Configuration
+# chains:
+#   - chain_id: "osmosis-1"
+#     chain_name: "Osmosis"
+#     network: "mainnet"
+#     chain_type: "cosmos"
+#     rpc_url: "https://rpc.osmosis.zone"
+#     rest_url: "https://lcd.osmosis.zone"
+#     bech32_prefix: "osmo"
+#     coin_denom: "uosmo"
+#     timeout: 30s
+#     retry_attempts: 3
+#     batch_size: 100
+
+# Cosmos Hub Testnet Configuration
+# chains:
+#   - chain_id: "theta-testnet-001"
+#     chain_name: "Cosmos Hub Testnet"
+#     network: "testnet"
+#     chain_type: "cosmos"
+#     rpc_url: "https://rpc.sentry-01.theta-testnet.polypore.xyz"
+#     rest_url: "https://rest.sentry-01.theta-testnet.polypore.xyz"
+#     bech32_prefix: "cosmos"
+#     coin_denom: "uatom"
+#     timeout: 30s
+#     retry_attempts: 3
+#     batch_size: 100
+
+# Juno Configuration
+# chains:
+#   - chain_id: "juno-1"
+#     chain_name: "Juno"
+#     network: "mainnet"
+#     chain_type: "cosmos"
+#     rpc_url: "https://rpc-juno.itastakers.com"
+#     rest_url: "https://lcd-juno.itastakers.com"
+#     bech32_prefix: "juno"
+#     coin_denom: "ujuno"
+#     timeout: 30s
+#     retry_attempts: 3
+#     batch_size: 100
+
+# Akash Configuration
+# chains:
+#   - chain_id: "akashnet-2"
+#     chain_name: "Akash"
+#     network: "mainnet"
+#     chain_type: "cosmos"
+#     rpc_url: "https://rpc.akash.forbole.com"
+#     rest_url: "https://lcd.akash.forbole.com"
+#     bech32_prefix: "akash"
+#     coin_denom: "uakt"
+#     timeout: 30s
+#     retry_attempts: 3
+#     batch_size: 100

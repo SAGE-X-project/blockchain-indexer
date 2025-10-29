@@ -232,3 +232,42 @@ func BenchmarkNewTimestamp(b *testing.B) {
 		_ = NewTimestamp(unix)
 	}
 }
+
+func TestTimeFromUnix(t *testing.T) {
+	tests := []struct {
+		name string
+		unix int64
+	}{
+		{
+			name: "current time",
+			unix: time.Now().Unix(),
+		},
+		{
+			name: "epoch time",
+			unix: 0,
+		},
+		{
+			name: "specific time",
+			unix: 1609459200, // 2021-01-01 00:00:00 UTC
+		},
+		{
+			name: "negative unix time",
+			unix: -62135596800, // 0001-01-01 00:00:00 UTC
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := TimeFromUnix(tt.unix)
+			expected := time.Unix(tt.unix, 0)
+
+			if !result.Equal(expected) {
+				t.Errorf("TimeFromUnix(%d) = %v, want %v", tt.unix, result, expected)
+			}
+
+			if result.Unix() != tt.unix {
+				t.Errorf("TimeFromUnix(%d).Unix() = %d, want %d", tt.unix, result.Unix(), tt.unix)
+			}
+		})
+	}
+}
