@@ -14,6 +14,9 @@ dist/
 *.out
 coverage.out
 coverage.html
+*.cover
+coverage/
+.coverage
 
 # Dependency directories
 vendor/
@@ -86,9 +89,14 @@ test/tmp/
 # Profiling data
 *.prof
 *.pprof
+cpu.prof
+mem.prof
+profile.out
 
 # Benchmarking data
 *.bench
+bench.out
+benchmarks/
 
 # Documentation build artifacts
 docs/_build/
@@ -106,3 +114,40 @@ docker-compose.override.yml
 # Backup files
 *.bak
 *.backup
+
+# Development artifacts
+*.swn
+.tool-versions
+.envrc
+
+# macOS specific
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# Linux specific
+*~
+.directory
+.Trash-*
+
+# Windows specific
+desktop.ini
+$RECYCLE.BIN/
+
+# Go specific
+go.work.sum
+.go
+
+# Air live reload (if using)
+.air.toml
+tmp/
+
+# Delve debugger
+__debug_bin
+
+# SQLite databases (if used for testing)
+*.sqlite
+*.sqlite3
+*.db-shm
+*.db-wal
