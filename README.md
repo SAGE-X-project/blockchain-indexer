@@ -15,10 +15,10 @@
 ### Multi-Chain Support
 - ✅ **EVM Chains**: Ethereum, BSC, Polygon, Arbitrum, Optimism, etc.
 - ✅ **Solana**: Solana mainnet, devnet, testnet
-- 🚧 **Cosmos**: Cosmos Hub, Osmosis, and other Cosmos SDK chains
-- 🚧 **Polkadot**: Polkadot, Kusama, and Substrate-based chains
-- 🚧 **Avalanche**: C-Chain, X-Chain, P-Chain
-- 🚧 **Ripple**: XRPL (XRP Ledger)
+- ✅ **Cosmos**: Cosmos Hub, Osmosis, and other Cosmos SDK chains
+- ✅ **Polkadot**: Polkadot, Kusama, and Substrate-based chains
+- ✅ **Avalanche**: C-Chain, X-Chain, P-Chain
+- ✅ **Ripple**: XRPL (XRP Ledger)
 
 ### Core Features
 - 🏗️ **SOLID Architecture**: Follows SOLID principles for maintainability
@@ -103,8 +103,13 @@ go mod download
 
 # Copy example config and customize
 cp config/config.example.yaml config/config.yaml
-# OR for Solana
-cp config/config-solana.example.yaml config/config.yaml
+
+# OR use chain-specific configs:
+# For Solana:    cp config/config-solana.example.yaml config/config.yaml
+# For Cosmos:    cp config/config-cosmos.example.yaml config/config.yaml
+# For Polkadot:  cp config/config-polkadot.example.yaml config/config.yaml
+# For Avalanche: cp config/config-avalanche.example.yaml config/config.yaml
+# For Ripple:    cp config/config-ripple.example.yaml config/config.yaml
 
 # Build the indexer
 go build -o bin/indexer ./cmd/indexer
@@ -234,17 +239,17 @@ For detailed deployment instructions, see [DEPLOYMENT.md](docs/DEPLOYMENT.md)
 - [x] Security scanning
 - [x] CI/CD documentation
 
-### Phase 6: Additional Chains 🔜
-- [ ] Cosmos adapter (Tendermint-based chains)
-- [ ] Polkadot adapter (Substrate-based chains)
-- [ ] Avalanche adapter (C-Chain, X-Chain, P-Chain)
-- [ ] Ripple adapter (XRPL)
+### Phase 6: Additional Chains ✅ 100%
+- [x] Cosmos adapter (Tendermint-based chains)
+- [x] Polkadot adapter (Substrate-based chains)
+- [x] Avalanche adapter (C-Chain, X-Chain, P-Chain)
+- [x] Ripple adapter (XRPL)
 - [ ] Chain adapter registry
 - [ ] Comprehensive API documentation
 
 See [IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) for full roadmap.
 
-**Current Status**: Phase 8 Complete - Fully Automated CI/CD Pipeline
+**Current Status**: Phase 6 & 8 Complete - Multi-Chain Support with CI/CD
 
 ---
 
