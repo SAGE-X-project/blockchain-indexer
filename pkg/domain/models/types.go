@@ -101,3 +101,8 @@ func NewTimestampWithSlot(unix int64, slot uint64) *Timestamp {
 		Slot: &slot,
 	}
 }
+
+// TimeFromUnix creates a time.Time from Unix timestamp
+func TimeFromUnix(unix int64) time.Time {
+	return time.Unix(unix, 0)
+}

@@ -1,0 +1,82 @@
+# Blockchain Indexer Configuration - Solana Development
+# Configuration for local development and testing with Solana
+
+# Application configuration
+app:
+  name: blockchain-indexer
+  version: 0.1.0-dev
+  environment: development
+
+# Storage configuration
+storage:
+  type: pebble
+
+  # PebbleDB configuration
+  pebble:
+    path: ./data/pebble-solana
+    cache_size: 67108864          # 64MB
+    max_open_files: 500
+    write_buffer_size: 33554432   # 32MB
+    max_concurrent_mem: 2
+    disable_wal: false
+    bytes_per_sync: 524288        # 512KB
+
+# Blockchain configurations
+chains:
+  # Solana Devnet (for testing)
+  - chain_type: solana
+    chain_id: solana-devnet
+    name: Solana Devnet
+    network: devnet
+    enabled: true
+    rpc_endpoints:
+      - https://api.devnet.solana.com
+    start_block: 0
+    batch_size: 50
+    workers: 5
+    confirmation_blocks: 0
+    retry_attempts: 3
+    retry_delay: 5s
+
+# Server configuration
+server:
+  # HTTP REST API server (includes GraphQL at /graphql)
+  http:
+    enabled: true
+    host: 0.0.0.0
+    port: 8080
+    tls_enabled: false
+    read_timeout: 30s
+    write_timeout: 30s
+
+  # gRPC server
+  grpc:
+    enabled: true
+    host: 0.0.0.0
+    port: 50051
+    tls_enabled: false
+
+  # GraphQL server (served through HTTP server)
+  graphql:
+    enabled: true
+    host: 0.0.0.0
+    port: 8080
+    playground: true
+
+# Logging configuration
+logging:
+  level: debug       # Use debug level for development
+  format: console    # Console format for better readability
+  output: stdout
+  max_size: 100
+  max_backups: 3
+  max_age: 7
+  compress: false
+
+# Metrics configuration (Prometheus)
+metrics:
+  enabled: true
+  host: 0.0.0.0
+  port: 9091
+  path: /metrics
+  interval: 10s
