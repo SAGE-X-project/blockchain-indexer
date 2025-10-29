@@ -72,6 +72,7 @@ For detailed architecture, see [ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - 📄 [Architecture](docs/ARCHITECTURE.md) - System architecture and design principles
 - 📄 [Directory Structure](docs/DIRECTORY_STRUCTURE.md) - Project layout and organization
 - 📄 [Implementation Plan](docs/IMPLEMENTATION_PLAN.md) - Phased development plan
+- 📄 [Deployment Guide](docs/DEPLOYMENT.md) - Docker, systemd, and production deployment
 
 ### API Documentation (Coming Soon)
 - 📄 API Reference - Complete API documentation
@@ -80,7 +81,6 @@ For detailed architecture, see [ARCHITECTURE.md](docs/ARCHITECTURE.md)
 
 ### Development Guides (Coming Soon)
 - 📄 Chain Adapter Guide - How to add new blockchain support
-- 📄 Deployment Guide - Production deployment instructions
 
 ---
 
@@ -158,6 +158,26 @@ go test -v ./test/integration/...
 ./bin/indexer config --help
 ```
 
+### Docker Deployment
+
+```bash
+# Build and run with Docker Compose (includes Prometheus & Grafana)
+docker-compose up -d
+
+# Access services:
+# - Indexer API: http://localhost:8080
+# - Prometheus: http://localhost:9090
+# - Grafana: http://localhost:3000 (admin/admin)
+
+# View logs
+docker-compose logs -f indexer
+
+# Stop services
+docker-compose down
+```
+
+For detailed deployment instructions, see [DEPLOYMENT.md](docs/DEPLOYMENT.md)
+
 ---
 
 ## 🛣️ Roadmap
@@ -194,14 +214,24 @@ go test -v ./test/integration/...
 - [x] Solana data normalizer
 - [x] Configuration support
 
-### Phase 6-8: Advanced Features 🔜
+### Phase 7: Production Features ✅ 100%
+- [x] Docker containerization
+- [x] Docker Compose with monitoring stack
+- [x] Prometheus metrics integration
+- [x] Grafana dashboards provisioning
+- [x] Systemd service configuration
+- [x] Deployment scripts and automation
+- [x] Deployment documentation
+
+### Phase 6 & 8: Advanced Features 🔜
 - [ ] Additional chain adapters (Cosmos, Polkadot, etc.)
-- [ ] Production deployment configurations
-- [ ] Comprehensive documentation
+- [ ] Kubernetes manifests
+- [ ] CI/CD pipelines
+- [ ] Comprehensive API documentation
 
 See [IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) for full roadmap.
 
-**Current Status**: Phase 5 Complete - Production Ready for EVM & Solana Chains
+**Current Status**: Phase 7 Complete - Production Ready with Full Deployment Stack
 
 ---
 
