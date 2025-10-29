@@ -73,6 +73,7 @@ For detailed architecture, see [ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - 📄 [Directory Structure](docs/DIRECTORY_STRUCTURE.md) - Project layout and organization
 - 📄 [Implementation Plan](docs/IMPLEMENTATION_PLAN.md) - Phased development plan
 - 📄 [Deployment Guide](docs/DEPLOYMENT.md) - Docker, systemd, and production deployment
+- 📄 [CI/CD Guide](docs/CI_CD.md) - GitHub Actions workflows and automation
 
 ### API Documentation (Coming Soon)
 - 📄 API Reference - Complete API documentation
@@ -223,15 +224,27 @@ For detailed deployment instructions, see [DEPLOYMENT.md](docs/DEPLOYMENT.md)
 - [x] Deployment scripts and automation
 - [x] Deployment documentation
 
-### Phase 6 & 8: Advanced Features 🔜
-- [ ] Additional chain adapters (Cosmos, Polkadot, etc.)
-- [ ] Kubernetes manifests
-- [ ] CI/CD pipelines
+### Phase 8: CI/CD & Automation ✅ 100%
+- [x] GitHub Actions CI workflow
+- [x] GitHub Actions release workflow
+- [x] Multi-platform binary builds
+- [x] Docker image publishing (GHCR)
+- [x] Dependabot configuration
+- [x] Automated testing and coverage
+- [x] Security scanning
+- [x] CI/CD documentation
+
+### Phase 6: Additional Chains 🔜
+- [ ] Cosmos adapter (Tendermint-based chains)
+- [ ] Polkadot adapter (Substrate-based chains)
+- [ ] Avalanche adapter (C-Chain, X-Chain, P-Chain)
+- [ ] Ripple adapter (XRPL)
+- [ ] Chain adapter registry
 - [ ] Comprehensive API documentation
 
 See [IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) for full roadmap.
 
-**Current Status**: Phase 7 Complete - Production Ready with Full Deployment Stack
+**Current Status**: Phase 8 Complete - Fully Automated CI/CD Pipeline
 
 ---
 
