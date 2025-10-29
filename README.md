@@ -100,6 +100,11 @@ cd blockchain-indexer
 # Install dependencies
 go mod download
 
+# Copy example config and customize
+cp config/config.example.yaml config/config.yaml
+# OR for Solana
+cp config/config-solana.example.yaml config/config.yaml
+
 # Build the indexer
 go build -o bin/indexer ./cmd/indexer
 ```
@@ -107,7 +112,7 @@ go build -o bin/indexer ./cmd/indexer
 ### Running the Server
 
 ```bash
-# Start the API server with default configuration
+# Start the API server with your configuration
 ./bin/indexer server --config config/config.yaml
 
 # The server will start with the following endpoints:

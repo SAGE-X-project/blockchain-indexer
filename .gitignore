@@ -44,7 +44,11 @@ data/
 logs/
 
 # Configuration files with sensitive data
+# Keep example configs (*.example.yaml) in git
+# Copy example to config.yaml for local use
 config/config.yaml
+config/config-*.yaml
+!config/*.example.yaml
 config/*.local.yaml
 config/secrets.yaml
 
