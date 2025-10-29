@@ -15,7 +15,7 @@
 # Variables
 PROJECT_NAME := blockchain-indexer
 BINARY_NAME := indexer
-BINARY_PATH := bin/$(BINARY_NAME)
+BINARY_PATH := build/$(BINARY_NAME)
 GO := go
 GOFILES := $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 GOPACKAGES := $(shell go list ./... | grep -v /vendor/)
