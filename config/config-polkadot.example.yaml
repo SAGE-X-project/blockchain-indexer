@@ -1,0 +1,153 @@
+# Polkadot/Substrate Chain Indexer Configuration
+
+# Storage configuration
+storage:
+  type: pebble
+  path: ./data/pebble
+
+# Chain configuration
+chains:
+  - chain_id: "polkadot"
+    chain_name: "Polkadot"
+    network: "mainnet"
+    chain_type: "polkadot"
+
+    # Substrate RPC endpoint
+    rpc_url: "https://rpc.polkadot.io"
+
+    # WebSocket endpoint
+    ws_url: "wss://rpc.polkadot.io"
+
+    # Connection settings
+    timeout: 30s
+    retry_attempts: 3
+    retry_delay: 1s
+    max_connections: 10
+
+    # Indexing settings
+    batch_size: 100
+    start_block: 0
+
+    # WebSocket settings
+    enable_websocket: false
+
+    # Polkadot-specific settings
+    ss58_format: 0
+    token_symbol: "DOT"
+    token_decimals: 10
+
+    # Data inclusion settings
+    include_extrinsics: true
+    include_events: true
+    include_logs: false
+
+# Server configuration
+server:
+  host: "0.0.0.0"
+  http_port: 8080
+  grpc_port: 50051
+
+  # TLS configuration (optional)
+  tls:
+    enabled: false
+    cert_file: ""
+    key_file: ""
+
+# Logging configuration
+logging:
+  level: "info"
+  format: "json"
+  output: "stdout"
+
+# Metrics configuration
+metrics:
+  enabled: true
+  host: "0.0.0.0"
+  port: 9091
+  path: "/metrics"
+
+# Event bus configuration
+event_bus:
+  queue_size: 10000
+  workers: 10
+  retry_attempts: 3
+  retry_delay: 1s
+
+# ================================
+# Alternative Substrate Chain Examples
+# ================================
+
+# Kusama Configuration
+# chains:
+#   - chain_id: "kusama"
+#     chain_name: "Kusama"
+#     network: "mainnet"
+#     chain_type: "polkadot"
+#     rpc_url: "https://kusama-rpc.polkadot.io"
+#     ws_url: "wss://kusama-rpc.polkadot.io"
+#     ss58_format: 2
+#     token_symbol: "KSM"
+#     token_decimals: 12
+#     timeout: 30s
+#     retry_attempts: 3
+#     batch_size: 100
+
+# Westend Testnet Configuration
+# chains:
+#   - chain_id: "westend"
+#     chain_name: "Westend"
+#     network: "testnet"
+#     chain_type: "polkadot"
+#     rpc_url: "https://westend-rpc.polkadot.io"
+#     ws_url: "wss://westend-rpc.polkadot.io"
+#     ss58_format: 42
+#     token_symbol: "WND"
+#     token_decimals: 12
+#     timeout: 30s
+#     retry_attempts: 3
+#     batch_size: 100
+
+# Moonbeam Configuration
+# chains:
+#   - chain_id: "moonbeam"
+#     chain_name: "Moonbeam"
+#     network: "mainnet"
+#     chain_type: "polkadot"
+#     rpc_url: "https://rpc.api.moonbeam.network"
+#     ws_url: "wss://wss.api.moonbeam.network"
+#     ss58_format: 1284
+#     token_symbol: "GLMR"
+#     token_decimals: 18
+#     timeout: 30s
+#     retry_attempts: 3
+#     batch_size: 100
+
+# Astar Configuration
+# chains:
+#   - chain_id: "astar"
+#     chain_name: "Astar"
+#     network: "mainnet"
+#     chain_type: "polkadot"
+#     rpc_url: "https://astar.api.onfinality.io/public"
+#     ws_url: "wss://astar.api.onfinality.io/public-ws"
+#     ss58_format: 5
+#     token_symbol: "ASTR"
+#     token_decimals: 18
+#     timeout: 30s
+#     retry_attempts: 3
+#     batch_size: 100
+
+# Acala Configuration
+# chains:
+#   - chain_id: "acala"
+#     chain_name: "Acala"
+#     network: "mainnet"
+#     chain_type: "polkadot"
+#     rpc_url: "https://acala-rpc.dwellir.com"
+#     ws_url: "wss://acala-rpc.dwellir.com"
+#     ss58_format: 10
+#     token_symbol: "ACA"
+#     token_decimals: 12
+#     timeout: 30s
+#     retry_attempts: 3
+#     batch_size: 100
