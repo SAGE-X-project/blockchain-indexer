@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/cockroachdb/pebble"
 	"github.com/sage-x-project/blockchain-indexer/pkg/domain/repository"
@@ -12,9 +13,10 @@ import (
 // PebbleStorage implements the Storage interface using PebbleDB
 // This is the main storage implementation that composes all repositories
 type PebbleStorage struct {
-	db      *pebble.DB
-	encoder *Encoder
-	path    string
+	db         *pebble.DB
+	encoder    *Encoder
+	path       string
+	statsCache *statsCache
 
 	// Embedded repository implementations
 	*BlockRepo
@@ -88,9 +90,10 @@ func NewStorage(config *Config) (*PebbleStorage, error) {
 
 	// Create storage instance
 	storage := &PebbleStorage{
-		db:      db,
-		encoder: encoder,
-		path:    config.Path,
+		db:         db,
+		encoder:    encoder,
+		path:       config.Path,
+		statsCache: newStatsCache(5 * time.Minute), // 5 minute cache TTL
 	}
 
 	// Initialize repositories
