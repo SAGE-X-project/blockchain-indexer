@@ -247,9 +247,18 @@ For detailed deployment instructions, see [DEPLOYMENT.md](docs/DEPLOYMENT.md)
 - [x] Chain adapter registry
 - [x] Comprehensive API documentation
 
-See [IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) for full roadmap.
+### Phase 9: Indexer Integration & Advanced Features 📋 0%
+- [ ] Complete indexer command implementation
+- [ ] Statistics system (real-time and historical)
+- [ ] Gap detection and recovery automation
+- [ ] Complete all pending API implementations
+- [ ] Performance optimization and caching
+- [ ] Enhanced monitoring and observability
+
+See [IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) and [PHASE_9_PLAN.md](docs/PHASE_9_PLAN.md) for full roadmap.
 
 **Current Status**: Phase 6 & 8 Complete - Multi-Chain Support with CI/CD
+**Next Phase**: Phase 9 - Indexer Integration (7 weeks estimated)
 
 ---
 
