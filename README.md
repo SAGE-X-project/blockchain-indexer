@@ -75,13 +75,13 @@ For detailed architecture, see [ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - 📄 [Deployment Guide](docs/DEPLOYMENT.md) - Docker, systemd, and production deployment
 - 📄 [CI/CD Guide](docs/CI_CD.md) - GitHub Actions workflows and automation
 
-### API Documentation (Coming Soon)
-- 📄 API Reference - Complete API documentation
-- 📄 GraphQL Schema - GraphQL schema definition
-- 📄 gRPC Protocol Buffers - Protocol Buffer definitions
+### API Documentation
+- 📄 [API Reference](docs/API_REFERENCE.md) - Complete API documentation (GraphQL, gRPC, REST)
+- 📄 [GraphQL Schema](pkg/presentation/graphql/schema/schema.graphql) - GraphQL schema definition
+- 📄 [gRPC Protocol Buffers](api/proto/indexer/v1/indexer.proto) - Protocol Buffer definitions
 
-### Development Guides (Coming Soon)
-- 📄 Chain Adapter Guide - How to add new blockchain support
+### Development Guides
+- 📄 [Chain Adapter Guide](docs/CHAIN_ADAPTER_GUIDE.md) - How to use and add new blockchain support
 
 ---
 
@@ -244,8 +244,8 @@ For detailed deployment instructions, see [DEPLOYMENT.md](docs/DEPLOYMENT.md)
 - [x] Polkadot adapter (Substrate-based chains)
 - [x] Avalanche adapter (C-Chain, X-Chain, P-Chain)
 - [x] Ripple adapter (XRPL)
-- [ ] Chain adapter registry
-- [ ] Comprehensive API documentation
+- [x] Chain adapter registry
+- [x] Comprehensive API documentation
 
 See [IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) for full roadmap.
 
