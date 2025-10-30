@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 
+	"github.com/sage-x-project/blockchain-indexer/pkg/application/statistics"
 	"github.com/sage-x-project/blockchain-indexer/pkg/infrastructure/config"
 	"github.com/sage-x-project/blockchain-indexer/pkg/infrastructure/event"
 	"github.com/sage-x-project/blockchain-indexer/pkg/infrastructure/logger"
@@ -129,6 +130,23 @@ func runServer(cmd *cobra.Command, args []string) error {
 	}
 	defer eventBus.Stop()
 
+	// Initialize statistics collector
+	log.Info("initializing statistics collector")
+	statsCollector := statistics.NewCollector(
+		storage,          // statsRepo
+		storage,          // blockRepo
+		storage,          // txRepo
+		storage,          // chainRepo
+		eventBus,
+		appMetrics,
+		log,
+		statistics.DefaultConfig(),
+	)
+	if err := statsCollector.Start(ctx); err != nil {
+		return fmt.Errorf("failed to start statistics collector: %w", err)
+	}
+	defer statsCollector.Stop()
+
 	// Create HTTP mux
 	httpMux := http.NewServeMux()
 
@@ -151,7 +169,7 @@ func runServer(cmd *cobra.Command, args []string) error {
 	// Initialize GraphQL API
 	if cfg.Server.HTTP.Enabled {
 		log.Info("initializing GraphQL API")
-		graphqlResolver := resolver.NewResolver(blockRepo, transactionRepo, chainRepo, nil, eventBus, log)
+		graphqlResolver := resolver.NewResolver(blockRepo, transactionRepo, chainRepo, nil, statsCollector, eventBus, log)
 		graphqlHandler := resolver.NewGraphQLHandler(graphqlResolver, true) // enable playground
 		httpMux.Handle("/graphql", graphqlHandler)
 		log.Info("GraphQL API registered at /graphql")
@@ -244,13 +262,19 @@ func runServer(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// 3. Stop event bus
+	// 3. Stop statistics collector
+	log.Info("stopping statistics collector")
+	if err := statsCollector.Stop(); err != nil {
+		log.Error("statistics collector shutdown error", zap.Error(err))
+	}
+
+	// 4. Stop event bus
 	log.Info("stopping event bus")
 	if err := eventBus.Stop(); err != nil {
 		log.Error("event bus shutdown error", zap.Error(err))
 	}
 
-	// 4. Close storage
+	// 5. Close storage
 	log.Info("closing storage")
 	if err := storage.Close(); err != nil {
 		log.Error("storage close error", zap.Error(err))

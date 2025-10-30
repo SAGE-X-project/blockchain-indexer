@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/sage-x-project/blockchain-indexer/pkg/application/indexer"
+	"github.com/sage-x-project/blockchain-indexer/pkg/application/statistics"
 	"github.com/sage-x-project/blockchain-indexer/pkg/domain/models"
 	"github.com/sage-x-project/blockchain-indexer/pkg/domain/repository"
 	gql "github.com/sage-x-project/blockchain-indexer/pkg/presentation/graphql"
@@ -22,6 +23,7 @@ type Resolver struct {
 	txRepo          repository.TransactionRepository
 	chainRepo       repository.ChainRepository
 	progressTracker *indexer.ProgressTracker
+	statsCollector  *statistics.Collector
 	eventBus        event.EventBus
 	logger          *logger.Logger
 }
@@ -32,6 +34,7 @@ func NewResolver(
 	txRepo repository.TransactionRepository,
 	chainRepo repository.ChainRepository,
 	progressTracker *indexer.ProgressTracker,
+	statsCollector *statistics.Collector,
 	eventBus event.EventBus,
 	logger *logger.Logger,
 ) *Resolver {
@@ -40,6 +43,7 @@ func NewResolver(
 		txRepo:          txRepo,
 		chainRepo:       chainRepo,
 		progressTracker: progressTracker,
+		statsCollector:  statsCollector,
 		eventBus:        eventBus,
 		logger:          logger,
 	}
@@ -355,27 +359,76 @@ func (r *Resolver) Gaps(ctx context.Context, chainID string) ([]*gql.Gap, error)
 
 // Stats resolves statistics for a chain
 func (r *Resolver) Stats(ctx context.Context, chainID string) (*gql.Stats, error) {
-	// For now, return zero stats
-	// TODO: Implement statistics collection
+	if r.statsCollector == nil {
+		return &gql.Stats{
+			TotalBlocks:       "0",
+			TotalTransactions: "0",
+			ChainsIndexed:     0,
+			AverageBlockTime:  0,
+			AverageTxPerBlock: 0,
+		}, nil
+	}
+
+	stats, err := r.statsCollector.GetChainStatistics(ctx, chainID)
+	if err != nil {
+		if err == repository.ErrNotFound {
+			return &gql.Stats{
+				TotalBlocks:       "0",
+				TotalTransactions: "0",
+				ChainsIndexed:     0,
+				AverageBlockTime:  0,
+				AverageTxPerBlock: 0,
+			}, nil
+		}
+		r.logger.Error("failed to get chain statistics",
+			zap.String("chain_id", chainID),
+			zap.Error(err),
+		)
+		return nil, err
+	}
+
 	return &gql.Stats{
-		TotalBlocks:       "0",
-		TotalTransactions: "0",
-		ChainsIndexed:     0,
-		AverageBlockTime:  0,
-		AverageTxPerBlock: 0,
+		TotalBlocks:       gql.BigInt(fmt.Sprintf("%d", stats.TotalBlocks)),
+		TotalTransactions: gql.BigInt(fmt.Sprintf("%d", stats.TotalTransactions)),
+		ChainsIndexed:     1,
+		AverageBlockTime:  stats.AverageBlockTime,
+		AverageTxPerBlock: stats.AverageTxPerBlock,
 	}, nil
 }
 
 // GlobalStats resolves global statistics
 func (r *Resolver) GlobalStats(ctx context.Context) (*gql.Stats, error) {
-	// For now, return zero stats
-	// TODO: Implement global statistics
+	if r.statsCollector == nil {
+		return &gql.Stats{
+			TotalBlocks:       "0",
+			TotalTransactions: "0",
+			ChainsIndexed:     0,
+			AverageBlockTime:  0,
+			AverageTxPerBlock: 0,
+		}, nil
+	}
+
+	stats, err := r.statsCollector.GetGlobalStatistics(ctx)
+	if err != nil {
+		if err == repository.ErrNotFound {
+			return &gql.Stats{
+				TotalBlocks:       "0",
+				TotalTransactions: "0",
+				ChainsIndexed:     0,
+				AverageBlockTime:  0,
+				AverageTxPerBlock: 0,
+			}, nil
+		}
+		r.logger.Error("failed to get global statistics", zap.Error(err))
+		return nil, err
+	}
+
 	return &gql.Stats{
-		TotalBlocks:       "0",
-		TotalTransactions: "0",
-		ChainsIndexed:     0,
-		AverageBlockTime:  0,
-		AverageTxPerBlock: 0,
+		TotalBlocks:       gql.BigInt(fmt.Sprintf("%d", stats.TotalBlocks)),
+		TotalTransactions: gql.BigInt(fmt.Sprintf("%d", stats.TotalTransactions)),
+		ChainsIndexed:     stats.TotalChains,
+		AverageBlockTime:  stats.AverageBlockTime,
+		AverageTxPerBlock: stats.AverageTxPerBlock,
 	}, nil
 }
 
