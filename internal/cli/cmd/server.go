@@ -2,16 +2,20 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/http/pprof"
 	"os"
 	"os/signal"
+	"runtime"
 	"syscall"
 	"time"
 
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 
+	"github.com/sage-x-project/blockchain-indexer/pkg/application/health"
 	"github.com/sage-x-project/blockchain-indexer/pkg/application/indexer"
 	"github.com/sage-x-project/blockchain-indexer/pkg/application/processor"
 	"github.com/sage-x-project/blockchain-indexer/pkg/application/statistics"
@@ -185,14 +189,79 @@ func runServer(cmd *cobra.Command, args []string) error {
 		log.Info("gap recovery initialized", zap.Int("chains", len(gapRecoveryMap)))
 	}
 
+	// Initialize health checker
+	log.Info("initializing health checker")
+	healthChecker := health.NewChecker(log, 30*time.Second)
+
+	// Register health checks
+	healthChecker.RegisterCheck("storage", health.StorageHealthCheck(chainRepo))
+	healthChecker.RegisterCheck("memory", health.MemoryHealthCheck(1024)) // 1GB threshold
+	healthChecker.RegisterCheck("goroutines", health.GoroutineHealthCheck(10000))
+
+	// Start background health checking
+	go healthChecker.StartPeriodicChecks(ctx)
+
 	// Create HTTP mux
 	httpMux := http.NewServeMux()
 
-	// Health check endpoint
+	// Basic health check endpoint
 	httpMux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintf(w, `{"status":"ok","version":"%s"}`, cfg.App.Version)
+	})
+
+	// Detailed health check endpoint
+	httpMux.HandleFunc("/health/detailed", func(w http.ResponseWriter, r *http.Request) {
+		report := healthChecker.RunChecks(r.Context())
+		w.Header().Set("Content-Type", "application/json")
+
+		statusCode := http.StatusOK
+		if report.Status == health.StatusDegraded {
+			statusCode = http.StatusOK // Still OK, but degraded
+		} else if report.Status == health.StatusUnhealthy {
+			statusCode = http.StatusServiceUnavailable
+		}
+
+		w.WriteHeader(statusCode)
+		json.NewEncoder(w).Encode(report)
+	})
+
+	// Debug endpoints (pprof)
+	httpMux.HandleFunc("/debug/pprof/", pprof.Index)
+	httpMux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+	httpMux.HandleFunc("/debug/pprof/profile", pprof.Profile)
+	httpMux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	httpMux.HandleFunc("/debug/pprof/trace", pprof.Trace)
+	httpMux.Handle("/debug/pprof/goroutine", pprof.Handler("goroutine"))
+	httpMux.Handle("/debug/pprof/heap", pprof.Handler("heap"))
+	httpMux.Handle("/debug/pprof/threadcreate", pprof.Handler("threadcreate"))
+	httpMux.Handle("/debug/pprof/block", pprof.Handler("block"))
+	httpMux.Handle("/debug/pprof/mutex", pprof.Handler("mutex"))
+	httpMux.Handle("/debug/pprof/allocs", pprof.Handler("allocs"))
+
+	// Runtime debug endpoint
+	httpMux.HandleFunc("/debug/stats", func(w http.ResponseWriter, r *http.Request) {
+		var m runtime.MemStats
+		runtime.ReadMemStats(&m)
+
+		stats := map[string]interface{}{
+			"memory": map[string]interface{}{
+				"alloc_mb":      m.Alloc / 1024 / 1024,
+				"total_alloc_mb": m.TotalAlloc / 1024 / 1024,
+				"sys_mb":        m.Sys / 1024 / 1024,
+				"num_gc":        m.NumGC,
+				"gc_pause_ms":   float64(m.PauseNs[(m.NumGC+255)%256]) / 1e6,
+			},
+			"runtime": map[string]interface{}{
+				"goroutines": runtime.NumGoroutine(),
+				"num_cpu":    runtime.NumCPU(),
+				"version":    runtime.Version(),
+			},
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(stats)
 	})
 
 	// Initialize REST API
