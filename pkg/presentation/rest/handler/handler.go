@@ -21,6 +21,7 @@ type Handler struct {
 	txRepo          repository.TransactionRepository
 	chainRepo       repository.ChainRepository
 	progressTracker *indexer.ProgressTracker
+	gapRecovery     map[string]*indexer.GapRecovery
 	logger          *logger.Logger
 	startTime       time.Time
 }
@@ -31,6 +32,7 @@ func NewHandler(
 	txRepo repository.TransactionRepository,
 	chainRepo repository.ChainRepository,
 	progressTracker *indexer.ProgressTracker,
+	gapRecovery map[string]*indexer.GapRecovery,
 	logger *logger.Logger,
 ) *Handler {
 	return &Handler{
@@ -38,6 +40,7 @@ func NewHandler(
 		txRepo:          txRepo,
 		chainRepo:       chainRepo,
 		progressTracker: progressTracker,
+		gapRecovery:     gapRecovery,
 		logger:          logger,
 		startTime:       time.Now(),
 	}
@@ -439,4 +442,52 @@ func (h *Handler) convertTransaction(tx *models.Transaction) TransactionResponse
 	}
 
 	return response
+}
+
+// GetChainGaps handles GET /chains/{chainID}/gaps
+func (h *Handler) GetChainGaps(w http.ResponseWriter, r *http.Request) {
+	chainID := chi.URLParam(r, "chainID")
+	if chainID == "" {
+		h.respondError(w, http.StatusBadRequest, "chain_id is required")
+		return
+	}
+
+	// Check if gap recovery is available for this chain
+	if h.gapRecovery == nil {
+		h.respondJSON(w, http.StatusOK, GapsResponse{Gaps: []GapInfo{}})
+		return
+	}
+
+	recovery, ok := h.gapRecovery[chainID]
+	if !ok {
+		h.respondJSON(w, http.StatusOK, GapsResponse{Gaps: []GapInfo{}})
+		return
+	}
+
+	// Detect gaps
+	gaps, err := recovery.DetectGaps(r.Context(), chainID)
+	if err != nil {
+		h.logger.Error("failed to detect gaps",
+			zap.String("chain_id", chainID),
+			zap.Error(err),
+		)
+		h.respondError(w, http.StatusInternalServerError, "failed to detect gaps")
+		return
+	}
+
+	// Convert to response format
+	gapInfos := make([]GapInfo, len(gaps))
+	for i, gap := range gaps {
+		gapInfos[i] = GapInfo{
+			ChainID:    gap.ChainID,
+			StartBlock: gap.StartBlock,
+			EndBlock:   gap.EndBlock,
+			Size:       gap.Size,
+		}
+	}
+
+	h.respondJSON(w, http.StatusOK, GapsResponse{
+		Gaps:  gapInfos,
+		Count: len(gapInfos),
+	})
 }

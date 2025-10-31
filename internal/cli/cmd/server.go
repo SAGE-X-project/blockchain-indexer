@@ -12,6 +12,8 @@ import (
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 
+	"github.com/sage-x-project/blockchain-indexer/pkg/application/indexer"
+	"github.com/sage-x-project/blockchain-indexer/pkg/application/processor"
 	"github.com/sage-x-project/blockchain-indexer/pkg/application/statistics"
 	"github.com/sage-x-project/blockchain-indexer/pkg/infrastructure/config"
 	"github.com/sage-x-project/blockchain-indexer/pkg/infrastructure/event"
@@ -147,6 +149,42 @@ func runServer(cmd *cobra.Command, args []string) error {
 	}
 	defer statsCollector.Stop()
 
+	// Initialize gap recovery for each chain
+	log.Info("initializing gap recovery")
+	gapRecoveryMap := make(map[string]*indexer.GapRecovery)
+
+	// Get all configured chains
+	chains, err := chainRepo.GetAllChains(ctx)
+	if err != nil {
+		log.Warn("failed to get chains for gap recovery", zap.Error(err))
+	} else {
+		// Create block processor for gap recovery
+		blockProcessor := processor.NewBlockProcessor(
+			storage,
+			storage,
+			storage,
+			eventBus,
+			log,
+			appMetrics,
+		)
+
+		// Create gap recovery for each chain
+		for _, chain := range chains {
+			// Note: In a full implementation, we'd need the actual chain adapter here
+			// For now, we create gap recovery without the adapter (it will be nil)
+			// This means gap recovery will only work for detection, not actual recovery
+			gapRecovery := indexer.NewGapRecovery(
+				nil, // adapter - would need to be created per chain
+				storage,
+				blockProcessor,
+				eventBus,
+				log,
+			)
+			gapRecoveryMap[chain.ChainID] = gapRecovery
+		}
+		log.Info("gap recovery initialized", zap.Int("chains", len(gapRecoveryMap)))
+	}
+
 	// Create HTTP mux
 	httpMux := http.NewServeMux()
 
@@ -160,7 +198,7 @@ func runServer(cmd *cobra.Command, args []string) error {
 	// Initialize REST API
 	if cfg.Server.HTTP.Enabled {
 		log.Info("initializing REST API")
-		restHandler := handler.NewHandler(blockRepo, transactionRepo, chainRepo, nil, log)
+		restHandler := handler.NewHandler(blockRepo, transactionRepo, chainRepo, nil, gapRecoveryMap, log)
 		restRouter := rest.NewRouter(restHandler, log)
 		httpMux.Handle("/api/", http.StripPrefix("/api", restRouter))
 		log.Info("REST API registered at /api/*")
@@ -169,7 +207,7 @@ func runServer(cmd *cobra.Command, args []string) error {
 	// Initialize GraphQL API
 	if cfg.Server.HTTP.Enabled {
 		log.Info("initializing GraphQL API")
-		graphqlResolver := resolver.NewResolver(blockRepo, transactionRepo, chainRepo, nil, statsCollector, eventBus, log)
+		graphqlResolver := resolver.NewResolver(blockRepo, transactionRepo, chainRepo, nil, statsCollector, gapRecoveryMap, eventBus, log)
 		graphqlHandler := resolver.NewGraphQLHandler(graphqlResolver, true) // enable playground
 		httpMux.Handle("/graphql", graphqlHandler)
 		log.Info("GraphQL API registered at /graphql")
@@ -207,6 +245,7 @@ func runServer(cmd *cobra.Command, args []string) error {
 			BlockRepo:        blockRepo,
 			TransactionRepo:  transactionRepo,
 			ChainRepo:        chainRepo,
+			GapRecovery:      gapRecoveryMap,
 			EventBus:         eventBus,
 			EnableReflection: true,
 		})

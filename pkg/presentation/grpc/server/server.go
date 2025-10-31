@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	indexerv1 "github.com/sage-x-project/blockchain-indexer/api/proto/indexer/v1"
+	"github.com/sage-x-project/blockchain-indexer/pkg/application/indexer"
 	"github.com/sage-x-project/blockchain-indexer/pkg/domain/repository"
 	"github.com/sage-x-project/blockchain-indexer/pkg/infrastructure/event"
 )
@@ -22,6 +23,7 @@ type Server struct {
 	blockRepo        repository.BlockRepository
 	transactionRepo  repository.TransactionRepository
 	chainRepo        repository.ChainRepository
+	gapRecovery      map[string]*indexer.GapRecovery
 	eventBus         event.EventBus
 	port             int
 }
@@ -32,6 +34,7 @@ type Config struct {
 	BlockRepo        repository.BlockRepository
 	TransactionRepo  repository.TransactionRepository
 	ChainRepo        repository.ChainRepository
+	GapRecovery      map[string]*indexer.GapRecovery
 	EventBus         event.EventBus
 	EnableReflection bool
 }
@@ -58,6 +61,7 @@ func NewServer(cfg Config) (*Server, error) {
 		blockRepo:       cfg.BlockRepo,
 		transactionRepo: cfg.TransactionRepo,
 		chainRepo:       cfg.ChainRepo,
+		gapRecovery:     cfg.GapRecovery,
 		eventBus:        cfg.EventBus,
 		port:            cfg.Port,
 	}

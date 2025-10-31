@@ -280,15 +280,45 @@ func (s *Server) GetProgress(ctx context.Context, req *indexerv1.GetProgressRequ
 	}, nil
 }
 
-// ListGaps lists gaps in indexed blocks (not implemented yet)
+// ListGaps lists gaps in indexed blocks
 func (s *Server) ListGaps(ctx context.Context, req *indexerv1.ListGapsRequest) (*indexerv1.ListGapsResponse, error) {
 	if req.ChainId == "" {
 		return nil, status.Error(codes.InvalidArgument, "chain_id is required")
 	}
 
-	// TODO: Implement gap detection
+	// Check if gap recovery is available for this chain
+	if s.gapRecovery == nil {
+		return &indexerv1.ListGapsResponse{
+			Gaps: []*indexerv1.Gap{},
+		}, nil
+	}
+
+	recovery, ok := s.gapRecovery[req.ChainId]
+	if !ok {
+		return &indexerv1.ListGapsResponse{
+			Gaps: []*indexerv1.Gap{},
+		}, nil
+	}
+
+	// Detect gaps
+	gaps, err := recovery.DetectGaps(ctx, req.ChainId)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to detect gaps: %v", err)
+	}
+
+	// Convert to proto
+	protoGaps := make([]*indexerv1.Gap, len(gaps))
+	for i, gap := range gaps {
+		protoGaps[i] = &indexerv1.Gap{
+			ChainId:    gap.ChainID,
+			StartBlock: gap.StartBlock,
+			EndBlock:   gap.EndBlock,
+			Size:       gap.Size,
+		}
+	}
+
 	return &indexerv1.ListGapsResponse{
-		Gaps: []*indexerv1.Gap{},
+		Gaps: protoGaps,
 	}, nil
 }
 

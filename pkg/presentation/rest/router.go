@@ -67,6 +67,11 @@ func NewRouter(h *handler.Handler, logger *logger.Logger) chi.Router {
 		r.Route("/chains/{chainID}/progress", func(r chi.Router) {
 			r.Get("/", h.GetProgress)
 		})
+
+		// Gap routes
+		r.Route("/chains/{chainID}/gaps", func(r chi.Router) {
+			r.Get("/", h.GetChainGaps)
+		})
 	})
 
 	return r

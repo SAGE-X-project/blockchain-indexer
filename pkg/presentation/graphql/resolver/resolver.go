@@ -24,6 +24,7 @@ type Resolver struct {
 	chainRepo       repository.ChainRepository
 	progressTracker *indexer.ProgressTracker
 	statsCollector  *statistics.Collector
+	gapRecovery     map[string]*indexer.GapRecovery // chainID -> GapRecovery
 	eventBus        event.EventBus
 	logger          *logger.Logger
 }
@@ -35,6 +36,7 @@ func NewResolver(
 	chainRepo repository.ChainRepository,
 	progressTracker *indexer.ProgressTracker,
 	statsCollector *statistics.Collector,
+	gapRecovery map[string]*indexer.GapRecovery,
 	eventBus event.EventBus,
 	logger *logger.Logger,
 ) *Resolver {
@@ -44,6 +46,7 @@ func NewResolver(
 		chainRepo:       chainRepo,
 		progressTracker: progressTracker,
 		statsCollector:  statsCollector,
+		gapRecovery:     gapRecovery,
 		eventBus:        eventBus,
 		logger:          logger,
 	}
@@ -352,9 +355,45 @@ func (r *Resolver) AllProgress(ctx context.Context) ([]*gql.Progress, error) {
 
 // Gaps resolves gaps for a chain
 func (r *Resolver) Gaps(ctx context.Context, chainID string) ([]*gql.Gap, error) {
-	// For now, return empty list
-	// TODO: Implement gap detection integration
-	return []*gql.Gap{}, nil
+	// Check if gap recovery is available for this chain
+	if r.gapRecovery == nil {
+		r.logger.Warn("gap recovery not initialized")
+		return []*gql.Gap{}, nil
+	}
+
+	recovery, ok := r.gapRecovery[chainID]
+	if !ok {
+		r.logger.Warn("gap recovery not found for chain", zap.String("chain_id", chainID))
+		return []*gql.Gap{}, nil
+	}
+
+	// Detect gaps
+	gaps, err := recovery.DetectGaps(ctx, chainID)
+	if err != nil {
+		r.logger.Error("failed to detect gaps",
+			zap.String("chain_id", chainID),
+			zap.Error(err),
+		)
+		return nil, fmt.Errorf("failed to detect gaps: %w", err)
+	}
+
+	// Convert to GraphQL type
+	result := make([]*gql.Gap, len(gaps))
+	for i, gap := range gaps {
+		result[i] = &gql.Gap{
+			ChainID:    gap.ChainID,
+			StartBlock: gql.BigInt(fmt.Sprintf("%d", gap.StartBlock)),
+			EndBlock:   gql.BigInt(fmt.Sprintf("%d", gap.EndBlock)),
+			Size:       gql.BigInt(fmt.Sprintf("%d", gap.Size)),
+		}
+	}
+
+	r.logger.Debug("resolved gaps query",
+		zap.String("chain_id", chainID),
+		zap.Int("gap_count", len(result)),
+	)
+
+	return result, nil
 }
 
 // Stats resolves statistics for a chain

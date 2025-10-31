@@ -88,12 +88,18 @@ type ProgressResponse struct {
 	Status             string    `json:"status"`
 }
 
-// GapResponse represents a gap in indexed blocks
-type GapResponse struct {
+// GapInfo represents a gap in indexed blocks
+type GapInfo struct {
 	ChainID    string `json:"chain_id"`
 	StartBlock uint64 `json:"start_block"`
 	EndBlock   uint64 `json:"end_block"`
 	Size       uint64 `json:"size"`
+}
+
+// GapsResponse represents a list of gaps
+type GapsResponse struct {
+	Gaps  []GapInfo `json:"gaps"`
+	Count int       `json:"count"`
 }
 
 // StatsResponse represents statistics
