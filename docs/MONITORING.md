@@ -593,14 +593,14 @@ go tool pprof -base g1.prof g2.prof
 
 When experiencing issues:
 
-1. ✅ Check `/health/detailed` endpoint
-2. ✅ Review recent logs for errors
-3. ✅ Check Prometheus metrics
-4. ✅ Capture CPU/memory profile
-5. ✅ Check goroutine count
-6. ✅ Verify network connectivity
-7. ✅ Check disk space
-8. ✅ Review configuration
+1. Check `/health/detailed` endpoint
+2. Review recent logs for errors
+3. Check Prometheus metrics
+4. Capture CPU/memory profile
+5. Check goroutine count
+6. Verify network connectivity
+7. Check disk space
+8. Review configuration
 
 ## Best Practices
 
