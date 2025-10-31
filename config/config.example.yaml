@@ -1,0 +1,134 @@
+# Blockchain Indexer Configuration
+# This is an example configuration file showing all available options
+
+# Application configuration
+app:
+  name: blockchain-indexer
+  version: 0.1.0
+  environment: development  # development, staging, production
+
+# Storage configuration
+storage:
+  type: pebble  # pebble, postgres
+
+  # PebbleDB configuration (for embedded key-value storage)
+  pebble:
+    path: ./data/pebble
+    cache_size: 67108864          # 64MB in bytes
+    max_open_files: 1000
+    write_buffer_size: 67108864   # 64MB in bytes
+    max_concurrent_mem: 2
+    disable_wal: false
+    bytes_per_sync: 524288        # 512KB in bytes
+
+  # PostgreSQL configuration (alternative to PebbleDB)
+  # postgres:
+  #   host: localhost
+  #   port: 5432
+  #   database: blockchain_indexer
+  #   username: postgres
+  #   password: postgres
+  #   ssl_mode: disable
+  #   max_connections: 100
+  #   max_idle_conns: 10
+  #   conn_max_lifetime: 1h
+
+# Blockchain configurations
+chains:
+  # Ethereum Mainnet
+  - chain_type: evm
+    chain_id: ethereum
+    name: Ethereum Mainnet
+    network: mainnet
+    enabled: true
+    rpc_endpoints:
+      - https://eth.llamarpc.com
+      - https://rpc.ankr.com/eth
+    ws_endpoints:
+      - wss://eth.llamarpc.com
+    start_block: 0
+    batch_size: 100
+    workers: 10
+    confirmation_blocks: 12
+    retry_attempts: 3
+    retry_delay: 5s
+
+  # Binance Smart Chain
+  - chain_type: evm
+    chain_id: bsc
+    name: Binance Smart Chain
+    network: mainnet
+    enabled: false
+    rpc_endpoints:
+      - https://bsc-dataseed.binance.org
+      - https://rpc.ankr.com/bsc
+    start_block: 0
+    batch_size: 100
+    workers: 10
+    confirmation_blocks: 15
+    retry_attempts: 3
+    retry_delay: 5s
+
+  # Polygon
+  - chain_type: evm
+    chain_id: polygon
+    name: Polygon
+    network: mainnet
+    enabled: false
+    rpc_endpoints:
+      - https://polygon-rpc.com
+      - https://rpc.ankr.com/polygon
+    start_block: 0
+    batch_size: 100
+    workers: 10
+    confirmation_blocks: 128
+    retry_attempts: 3
+    retry_delay: 5s
+
+# Server configuration
+server:
+  # HTTP REST API server
+  http:
+    enabled: true
+    host: 0.0.0.0
+    port: 8080
+    tls_enabled: false
+    # tls_cert_file: /path/to/cert.pem
+    # tls_key_file: /path/to/key.pem
+    read_timeout: 30s
+    write_timeout: 30s
+
+  # gRPC server
+  grpc:
+    enabled: true
+    host: 0.0.0.0
+    port: 9090
+    tls_enabled: false
+    # tls_cert_file: /path/to/cert.pem
+    # tls_key_file: /path/to/key.pem
+
+  # GraphQL server
+  graphql:
+    enabled: true
+    host: 0.0.0.0
+    port: 8081
+    playground: true  # Enable GraphQL playground in development
+
+# Logging configuration
+logging:
+  level: info        # debug, info, warn, error
+  format: json       # json, console
+  output: stdout     # stdout, stderr, file
+  # file_path: /var/log/blockchain-indexer/app.log
+  max_size: 100      # megabytes
+  max_backups: 3     # number of old log files to keep
+  max_age: 7         # days to keep old log files
+  compress: true     # compress old log files
+
+# Metrics configuration (Prometheus)
+metrics:
+  enabled: true
+  host: 0.0.0.0
+  port: 9091
+  path: /metrics
+  interval: 10s  # metrics collection interval

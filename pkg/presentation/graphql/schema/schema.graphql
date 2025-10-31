@@ -1,0 +1,222 @@
+# GraphQL Schema for Blockchain Indexer
+
+scalar Time
+scalar BigInt
+
+# Chain Types
+enum ChainType {
+  EVM
+  SOLANA
+  COSMOS
+}
+
+# Chain Status
+enum ChainStatus {
+  ACTIVE
+  INACTIVE
+  SYNCING
+  ERROR
+}
+
+# Transaction Status
+enum TransactionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+# Chain Information
+type Chain {
+  chainID: String!
+  chainType: ChainType!
+  name: String!
+  network: String!
+  status: ChainStatus!
+  startBlock: BigInt!
+  latestIndexedBlock: BigInt!
+  latestChainBlock: BigInt!
+  lastUpdated: Time!
+}
+
+# Block
+type Block {
+  chainID: String!
+  chainType: ChainType!
+  number: BigInt!
+  hash: String!
+  parentHash: String!
+  timestamp: Time!
+  gasUsed: BigInt
+  gasLimit: BigInt
+  baseFee: BigInt
+  difficulty: BigInt
+  miner: String
+  extraData: String
+  txCount: Int!
+  transactions: [Transaction!]!
+  createdAt: Time!
+}
+
+# Transaction
+type Transaction {
+  chainID: String!
+  hash: String!
+  blockNumber: BigInt!
+  blockHash: String!
+  blockTimestamp: Time!
+  txIndex: Int!
+  from: String!
+  to: String
+  value: BigInt!
+  gasPrice: BigInt
+  gasLimit: BigInt!
+  gasUsed: BigInt
+  nonce: BigInt!
+  input: String
+  status: TransactionStatus!
+  contractAddress: String
+  logs: [Log!]!
+  createdAt: Time!
+}
+
+# Transaction Log/Event
+type Log {
+  address: String!
+  topics: [String!]!
+  data: String!
+  logIndex: Int!
+}
+
+# Indexing Progress
+type Progress {
+  chainID: String!
+  chainType: String!
+  latestIndexedBlock: BigInt!
+  latestChainBlock: BigInt!
+  targetBlock: BigInt!
+  startBlock: BigInt!
+  blocksBehind: BigInt!
+  progressPercentage: Float!
+  blocksPerSecond: Float!
+  estimatedTimeLeft: String!
+  lastUpdated: Time!
+  status: String!
+}
+
+# Gap Information
+type Gap {
+  chainID: String!
+  startBlock: BigInt!
+  endBlock: BigInt!
+  size: BigInt!
+}
+
+# Statistics
+type Stats {
+  totalBlocks: BigInt!
+  totalTransactions: BigInt!
+  chainsIndexed: Int!
+  averageBlockTime: Float!
+  averageTxPerBlock: Float!
+}
+
+# Pagination Info
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+  totalCount: Int!
+}
+
+# Block Connection (for pagination)
+type BlockConnection {
+  edges: [BlockEdge!]!
+  pageInfo: PageInfo!
+}
+
+type BlockEdge {
+  node: Block!
+  cursor: String!
+}
+
+# Transaction Connection (for pagination)
+type TransactionConnection {
+  edges: [TransactionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type TransactionEdge {
+  node: Transaction!
+  cursor: String!
+}
+
+# Query Root
+type Query {
+  # Chain queries
+  chain(chainID: String!): Chain
+  chains: [Chain!]!
+
+  # Block queries
+  block(chainID: String!, number: BigInt!): Block
+  blockByHash(chainID: String!, hash: String!): Block
+  blocks(
+    chainID: String!
+    first: Int
+    after: String
+    last: Int
+    before: String
+    orderBy: String
+  ): BlockConnection!
+  blockRange(chainID: String!, startBlock: BigInt!, endBlock: BigInt!): [Block!]!
+  latestBlock(chainID: String!): Block
+
+  # Transaction queries
+  transaction(chainID: String!, hash: String!): Transaction
+  transactions(
+    chainID: String!
+    first: Int
+    after: String
+    last: Int
+    before: String
+    blockNumber: BigInt
+    from: String
+    to: String
+  ): TransactionConnection!
+  transactionsByBlock(chainID: String!, blockNumber: BigInt!): [Transaction!]!
+  transactionsByAddress(
+    chainID: String!
+    address: String!
+    first: Int
+    after: String
+  ): TransactionConnection!
+
+  # Progress queries
+  progress(chainID: String!): Progress
+  allProgress: [Progress!]!
+
+  # Gap queries
+  gaps(chainID: String!): [Gap!]!
+
+  # Statistics
+  stats(chainID: String!): Stats
+  globalStats: Stats
+}
+
+# Subscription Root
+type Subscription {
+  # Subscribe to new blocks
+  blockIndexed(chainID: String!): Block!
+
+  # Subscribe to new transactions
+  transactionIndexed(chainID: String!): Transaction!
+
+  # Subscribe to chain sync progress
+  syncProgress(chainID: String!): Progress!
+
+  # Subscribe to gap detection
+  gapDetected(chainID: String!): Gap!
+
+  # Subscribe to gap recovery
+  gapRecovered(chainID: String!): Gap!
+}

@@ -1,0 +1,314 @@
+syntax = "proto3";
+
+package indexer.v1;
+
+option go_package = "github.com/sage-x-project/blockchain-indexer/api/proto/indexer/v1;indexerv1";
+
+import "google/protobuf/timestamp.proto";
+
+// ChainType represents the blockchain type
+enum ChainType {
+  CHAIN_TYPE_UNSPECIFIED = 0;
+  CHAIN_TYPE_EVM = 1;
+  CHAIN_TYPE_SOLANA = 2;
+  CHAIN_TYPE_COSMOS = 3;
+}
+
+// ChainStatus represents the chain indexing status
+enum ChainStatus {
+  CHAIN_STATUS_UNSPECIFIED = 0;
+  CHAIN_STATUS_ACTIVE = 1;
+  CHAIN_STATUS_INACTIVE = 2;
+  CHAIN_STATUS_SYNCING = 3;
+  CHAIN_STATUS_ERROR = 4;
+}
+
+// TransactionStatus represents transaction execution status
+enum TransactionStatus {
+  TRANSACTION_STATUS_UNSPECIFIED = 0;
+  TRANSACTION_STATUS_PENDING = 1;
+  TRANSACTION_STATUS_SUCCESS = 2;
+  TRANSACTION_STATUS_FAILED = 3;
+}
+
+// Chain information
+message Chain {
+  string chain_id = 1;
+  ChainType chain_type = 2;
+  string name = 3;
+  string network = 4;
+  ChainStatus status = 5;
+  uint64 start_block = 6;
+  uint64 latest_indexed_block = 7;
+  uint64 latest_chain_block = 8;
+  google.protobuf.Timestamp last_updated = 9;
+}
+
+// Block represents a blockchain block
+message Block {
+  string chain_id = 1;
+  ChainType chain_type = 2;
+  uint64 number = 3;
+  string hash = 4;
+  string parent_hash = 5;
+  google.protobuf.Timestamp timestamp = 6;
+  uint64 gas_used = 7;
+  uint64 gas_limit = 8;
+  string miner = 9;
+  int32 tx_count = 10;
+  repeated Transaction transactions = 11;
+  google.protobuf.Timestamp indexed_at = 12;
+}
+
+// Transaction represents a blockchain transaction
+message Transaction {
+  string chain_id = 1;
+  string hash = 2;
+  uint64 block_number = 3;
+  string block_hash = 4;
+  google.protobuf.Timestamp block_timestamp = 5;
+  uint32 tx_index = 6;
+  string from = 7;
+  string to = 8;
+  string value = 9;
+  string gas_price = 10;
+  uint64 gas_used = 11;
+  uint64 nonce = 12;
+  bytes input = 13;
+  TransactionStatus status = 14;
+  string contract_address = 15;
+  repeated Log logs = 16;
+  google.protobuf.Timestamp indexed_at = 17;
+}
+
+// Log represents a transaction event log
+message Log {
+  string address = 1;
+  repeated string topics = 2;
+  bytes data = 3;
+  uint32 log_index = 4;
+}
+
+// Progress represents indexing progress
+message Progress {
+  string chain_id = 1;
+  string chain_type = 2;
+  uint64 latest_indexed_block = 3;
+  uint64 latest_chain_block = 4;
+  uint64 target_block = 5;
+  uint64 start_block = 6;
+  uint64 blocks_behind = 7;
+  double progress_percentage = 8;
+  double blocks_per_second = 9;
+  int64 estimated_time_left_seconds = 10;
+  google.protobuf.Timestamp last_updated = 11;
+  string status = 12;
+}
+
+// Gap represents a gap in indexed blocks
+message Gap {
+  string chain_id = 1;
+  uint64 start_block = 2;
+  uint64 end_block = 3;
+  uint64 size = 4;
+}
+
+// Statistics
+message Stats {
+  uint64 total_blocks = 1;
+  uint64 total_transactions = 2;
+  int32 chains_indexed = 3;
+  double average_block_time = 4;
+  double average_tx_per_block = 5;
+}
+
+// Pagination
+message PageInfo {
+  bool has_next_page = 1;
+  bool has_previous_page = 2;
+  string start_cursor = 3;
+  string end_cursor = 4;
+  int32 total_count = 5;
+}
+
+// Request/Response messages
+
+// GetChainRequest
+message GetChainRequest {
+  string chain_id = 1;
+}
+
+// GetChainResponse
+message GetChainResponse {
+  Chain chain = 1;
+}
+
+// ListChainsRequest
+message ListChainsRequest {}
+
+// ListChainsResponse
+message ListChainsResponse {
+  repeated Chain chains = 1;
+}
+
+// GetBlockRequest
+message GetBlockRequest {
+  string chain_id = 1;
+  uint64 number = 2;
+}
+
+// GetBlockResponse
+message GetBlockResponse {
+  Block block = 1;
+}
+
+// GetBlockByHashRequest
+message GetBlockByHashRequest {
+  string chain_id = 1;
+  string hash = 2;
+}
+
+// GetBlockByHashResponse
+message GetBlockByHashResponse {
+  Block block = 1;
+}
+
+// ListBlocksRequest
+message ListBlocksRequest {
+  string chain_id = 1;
+  uint64 start_block = 2;
+  uint64 end_block = 3;
+  int32 page_size = 4;
+  string page_token = 5;
+}
+
+// ListBlocksResponse
+message ListBlocksResponse {
+  repeated Block blocks = 1;
+  string next_page_token = 2;
+  int32 total_count = 3;
+}
+
+// GetLatestBlockRequest
+message GetLatestBlockRequest {
+  string chain_id = 1;
+}
+
+// GetLatestBlockResponse
+message GetLatestBlockResponse {
+  Block block = 1;
+}
+
+// GetTransactionRequest
+message GetTransactionRequest {
+  string chain_id = 1;
+  string hash = 2;
+}
+
+// GetTransactionResponse
+message GetTransactionResponse {
+  Transaction transaction = 1;
+}
+
+// ListTransactionsByBlockRequest
+message ListTransactionsByBlockRequest {
+  string chain_id = 1;
+  uint64 block_number = 2;
+}
+
+// ListTransactionsByBlockResponse
+message ListTransactionsByBlockResponse {
+  repeated Transaction transactions = 1;
+}
+
+// ListTransactionsByAddressRequest
+message ListTransactionsByAddressRequest {
+  string chain_id = 1;
+  string address = 2;
+  int32 page_size = 3;
+  string page_token = 4;
+}
+
+// ListTransactionsByAddressResponse
+message ListTransactionsByAddressResponse {
+  repeated Transaction transactions = 1;
+  string next_page_token = 2;
+  int32 total_count = 3;
+}
+
+// GetProgressRequest
+message GetProgressRequest {
+  string chain_id = 1;
+}
+
+// GetProgressResponse
+message GetProgressResponse {
+  Progress progress = 1;
+}
+
+// ListGapsRequest
+message ListGapsRequest {
+  string chain_id = 1;
+}
+
+// ListGapsResponse
+message ListGapsResponse {
+  repeated Gap gaps = 1;
+}
+
+// GetStatsRequest
+message GetStatsRequest {
+  string chain_id = 1;
+}
+
+// GetStatsResponse
+message GetStatsResponse {
+  Stats stats = 1;
+}
+
+// StreamBlocksRequest
+message StreamBlocksRequest {
+  string chain_id = 1;
+}
+
+// StreamTransactionsRequest
+message StreamTransactionsRequest {
+  string chain_id = 1;
+}
+
+// StreamProgressRequest
+message StreamProgressRequest {
+  string chain_id = 1;
+}
+
+// IndexerService provides blockchain indexing data access
+service IndexerService {
+  // Chain operations
+  rpc GetChain(GetChainRequest) returns (GetChainResponse);
+  rpc ListChains(ListChainsRequest) returns (ListChainsResponse);
+
+  // Block operations
+  rpc GetBlock(GetBlockRequest) returns (GetBlockResponse);
+  rpc GetBlockByHash(GetBlockByHashRequest) returns (GetBlockByHashResponse);
+  rpc ListBlocks(ListBlocksRequest) returns (ListBlocksResponse);
+  rpc GetLatestBlock(GetLatestBlockRequest) returns (GetLatestBlockResponse);
+
+  // Transaction operations
+  rpc GetTransaction(GetTransactionRequest) returns (GetTransactionResponse);
+  rpc ListTransactionsByBlock(ListTransactionsByBlockRequest) returns (ListTransactionsByBlockResponse);
+  rpc ListTransactionsByAddress(ListTransactionsByAddressRequest) returns (ListTransactionsByAddressResponse);
+
+  // Progress operations
+  rpc GetProgress(GetProgressRequest) returns (GetProgressResponse);
+
+  // Gap operations
+  rpc ListGaps(ListGapsRequest) returns (ListGapsResponse);
+
+  // Statistics
+  rpc GetStats(GetStatsRequest) returns (GetStatsResponse);
+
+  // Streaming operations
+  rpc StreamBlocks(StreamBlocksRequest) returns (stream Block);
+  rpc StreamTransactions(StreamTransactionsRequest) returns (stream Transaction);
+  rpc StreamProgress(StreamProgressRequest) returns (stream Progress);
+}

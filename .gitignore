@@ -1,0 +1,153 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+bin/
+dist/
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+coverage.out
+coverage.html
+*.cover
+coverage/
+.coverage
+
+# Dependency directories
+vendor/
+
+# Go workspace file
+go.work
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Data directories
+data/
+*.db
+*.pebble/
+
+# Log files
+*.log
+logs/
+
+# Configuration files with sensitive data
+# Keep example configs (*.example.yaml) in git
+# Copy example to config.yaml for local use
+config/config.yaml
+config/config-*.yaml
+!config/*.example.yaml
+config/*.local.yaml
+config/secrets.yaml
+
+# TLS certificates and keys
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+certs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Build artifacts
+build/
+*.tar.gz
+*.zip
+
+# Generated files
+api/proto/generated/
+api/graphql/generated/
+**/generated/
+
+# OS specific files
+Thumbs.db
+ehthumbs.db
+
+# Testing
+testdata/output/
+test/tmp/
+
+# Profiling data
+*.prof
+*.pprof
+cpu.prof
+mem.prof
+profile.out
+
+# Benchmarking data
+*.bench
+bench.out
+benchmarks/
+
+# Documentation build artifacts
+docs/_build/
+site/
+
+# Node modules (if using any frontend tooling)
+node_modules/
+
+# Docker
+docker-compose.override.yml
+
+# Kubernetes
+*.kubeconfig
+
+# Backup files
+*.bak
+*.backup
+
+# Development artifacts
+*.swn
+.tool-versions
+.envrc
+
+# macOS specific
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# Linux specific
+*~
+.directory
+.Trash-*
+
+# Windows specific
+desktop.ini
+$RECYCLE.BIN/
+
+# Go specific
+go.work.sum
+.go
+
+# Air live reload (if using)
+.air.toml
+tmp/
+
+# Delve debugger
+__debug_bin
+
+# SQLite databases (if used for testing)
+*.sqlite
+*.sqlite3
+*.db-shm
+*.db-wal

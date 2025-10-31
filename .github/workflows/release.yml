@@ -1,0 +1,171 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+  packages: write
+
+env:
+  GO_VERSION: '1.21'
+  REGISTRY: ghcr.io
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      version: ${{ steps.get_version.outputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version
+        id: get_version
+        run: echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          echo "# Changelog" > CHANGELOG.md
+          git log $(git describe --tags --abbrev=0 HEAD^)..HEAD --pretty=format:"- %s (%h)" >> CHANGELOG.md
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.get_version.outputs.version }}
+          release_name: Release ${{ steps.get_version.outputs.version }}
+          body_path: CHANGELOG.md
+          draft: false
+          prerelease: false
+
+  build-and-upload:
+    name: Build and Upload
+    runs-on: ubuntu-latest
+    needs: create-release
+    strategy:
+      matrix:
+        goos: [linux, darwin, windows]
+        goarch: [amd64, arm64]
+        exclude:
+          - goos: windows
+            goarch: arm64
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Build binary
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          VERSION=${{ needs.create-release.outputs.version }}
+          COMMIT=$(git rev-parse --short HEAD)
+          BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+          LDFLAGS="-w -s"
+          LDFLAGS="${LDFLAGS} -X main.version=${VERSION}"
+          LDFLAGS="${LDFLAGS} -X main.commit=${COMMIT}"
+          LDFLAGS="${LDFLAGS} -X main.date=${BUILD_DATE}"
+
+          BINARY_NAME="blockchain-indexer-${VERSION}-${GOOS}-${GOARCH}"
+          if [ "$GOOS" = "windows" ]; then
+            BINARY_NAME="${BINARY_NAME}.exe"
+          fi
+
+          CGO_ENABLED=0 go build -ldflags="${LDFLAGS}" -o "bin/${BINARY_NAME}" ./cmd/indexer
+
+          # Create archive
+          if [ "$GOOS" = "windows" ]; then
+            zip "bin/${BINARY_NAME}.zip" "bin/${BINARY_NAME}"
+            ASSET_PATH="bin/${BINARY_NAME}.zip"
+          else
+            tar -czf "bin/${BINARY_NAME}.tar.gz" -C bin "${BINARY_NAME}"
+            ASSET_PATH="bin/${BINARY_NAME}.tar.gz"
+          fi
+
+          echo "ASSET_PATH=${ASSET_PATH}" >> $GITHUB_ENV
+          echo "ASSET_NAME=$(basename ${ASSET_PATH})" >> $GITHUB_ENV
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ${{ env.ASSET_PATH }}
+          asset_name: ${{ env.ASSET_NAME }}
+          asset_content_type: application/octet-stream
+
+  docker-release:
+    name: Docker Release
+    runs-on: ubuntu-latest
+    needs: create-release
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=raw,value=latest
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  notify:
+    name: Notify Release
+    runs-on: ubuntu-latest
+    needs: [create-release, build-and-upload, docker-release]
+    steps:
+      - name: Notify success
+        run: |
+          echo "Release ${{ needs.create-release.outputs.version }} completed successfully!"
+          echo "Binaries uploaded for multiple platforms"
+          echo "Docker images pushed to GitHub Container Registry"

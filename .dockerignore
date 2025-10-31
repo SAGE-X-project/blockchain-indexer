@@ -1,0 +1,87 @@
+# Git
+.git
+.gitignore
+.github
+
+# Documentation
+*.md
+docs/
+LICENSE
+
+# Build artifacts
+bin/
+dist/
+build/
+
+# Test files
+*_test.go
+test/
+testdata/
+coverage.out
+coverage.html
+*.test
+
+# Data directories
+data/
+*.db
+*.pebble/
+
+# Configuration with sensitive data
+config/config.yaml
+config/*.local.yaml
+config/secrets.yaml
+
+# Logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Dependencies (will be downloaded during build)
+vendor/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# TLS certificates
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+certs/
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# Scripts
+scripts/
+
+# Kubernetes
+deployments/kubernetes/
+
+# Backup files
+*.bak
+*.backup
+
+# Profiling
+*.prof
+*.pprof
+
+# Benchmarking
+*.bench
