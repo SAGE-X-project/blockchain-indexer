@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/sage-x-project/blockchain-indexer/pkg/application/indexer"
+	"github.com/sage-x-project/blockchain-indexer/pkg/application/statistics"
 	"github.com/sage-x-project/blockchain-indexer/pkg/domain/models"
 	"github.com/sage-x-project/blockchain-indexer/pkg/domain/repository"
 	"github.com/sage-x-project/blockchain-indexer/pkg/infrastructure/logger"
@@ -22,6 +23,7 @@ type Handler struct {
 	chainRepo       repository.ChainRepository
 	progressTracker *indexer.ProgressTracker
 	gapRecovery     map[string]*indexer.GapRecovery
+	statsCollector  *statistics.Collector
 	logger          *logger.Logger
 	startTime       time.Time
 }
@@ -33,6 +35,7 @@ func NewHandler(
 	chainRepo repository.ChainRepository,
 	progressTracker *indexer.ProgressTracker,
 	gapRecovery map[string]*indexer.GapRecovery,
+	statsCollector *statistics.Collector,
 	logger *logger.Logger,
 ) *Handler {
 	return &Handler{
@@ -41,6 +44,7 @@ func NewHandler(
 		chainRepo:       chainRepo,
 		progressTracker: progressTracker,
 		gapRecovery:     gapRecovery,
+		statsCollector:  statsCollector,
 		logger:          logger,
 		startTime:       time.Now(),
 	}
@@ -489,5 +493,107 @@ func (h *Handler) GetChainGaps(w http.ResponseWriter, r *http.Request) {
 	h.respondJSON(w, http.StatusOK, GapsResponse{
 		Gaps:  gapInfos,
 		Count: len(gapInfos),
+	})
+}
+
+// ListChains handles GET /chains
+func (h *Handler) ListChains(w http.ResponseWriter, r *http.Request) {
+	chains, err := h.chainRepo.GetAllChains(r.Context())
+	if err != nil {
+		h.logger.Error("failed to list chains", zap.Error(err))
+		h.respondError(w, http.StatusInternalServerError, "failed to list chains")
+		return
+	}
+
+	// Convert to response format
+	responses := make([]ChainResponse, len(chains))
+	for i, chain := range chains {
+		responses[i] = ChainResponse{
+			ChainID:            chain.ChainID,
+			ChainType:          string(chain.ChainType),
+			Name:               chain.Name,
+			Network:            chain.Network,
+			Status:             string(chain.Status),
+			StartBlock:         chain.StartBlock,
+			LatestIndexedBlock: chain.LatestIndexedBlock,
+			LatestChainBlock:   chain.LatestChainBlock,
+			LastUpdated:        chain.LastUpdated,
+		}
+	}
+
+	h.respondJSON(w, http.StatusOK, map[string]interface{}{
+		"chains": responses,
+		"count":  len(responses),
+	})
+}
+
+// GetChainStats handles GET /chains/{chainID}/stats
+func (h *Handler) GetChainStats(w http.ResponseWriter, r *http.Request) {
+	chainID := chi.URLParam(r, "chainID")
+	if chainID == "" {
+		h.respondError(w, http.StatusBadRequest, "chain_id is required")
+		return
+	}
+
+	// Check if stats collector is available
+	if h.statsCollector == nil {
+		h.respondJSON(w, http.StatusOK, StatsResponse{
+			TotalBlocks:       0,
+			TotalTransactions: 0,
+			ChainsIndexed:     0,
+			AverageBlockTime:  0,
+			AverageTxPerBlock: 0,
+		})
+		return
+	}
+
+	// Get chain statistics
+	stats, err := h.statsCollector.GetChainStatistics(r.Context(), chainID)
+	if err != nil {
+		h.logger.Error("failed to get chain stats",
+			zap.String("chain_id", chainID),
+			zap.Error(err),
+		)
+		h.respondError(w, http.StatusInternalServerError, "failed to get statistics")
+		return
+	}
+
+	h.respondJSON(w, http.StatusOK, StatsResponse{
+		TotalBlocks:       stats.TotalBlocks,
+		TotalTransactions: stats.TotalTransactions,
+		ChainsIndexed:     1,
+		AverageBlockTime:  stats.AverageBlockTime,
+		AverageTxPerBlock: stats.AverageTxPerBlock,
+	})
+}
+
+// GetGlobalStats handles GET /stats
+func (h *Handler) GetGlobalStats(w http.ResponseWriter, r *http.Request) {
+	// Check if stats collector is available
+	if h.statsCollector == nil {
+		h.respondJSON(w, http.StatusOK, StatsResponse{
+			TotalBlocks:       0,
+			TotalTransactions: 0,
+			ChainsIndexed:     0,
+			AverageBlockTime:  0,
+			AverageTxPerBlock: 0,
+		})
+		return
+	}
+
+	// Get global statistics
+	stats, err := h.statsCollector.GetGlobalStatistics(r.Context())
+	if err != nil {
+		h.logger.Error("failed to get global stats", zap.Error(err))
+		h.respondError(w, http.StatusInternalServerError, "failed to get global statistics")
+		return
+	}
+
+	h.respondJSON(w, http.StatusOK, StatsResponse{
+		TotalBlocks:       stats.TotalBlocks,
+		TotalTransactions: stats.TotalTransactions,
+		ChainsIndexed:     stats.TotalChains,
+		AverageBlockTime:  stats.AverageBlockTime,
+		AverageTxPerBlock: stats.AverageTxPerBlock,
 	})
 }

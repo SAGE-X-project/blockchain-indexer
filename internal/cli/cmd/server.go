@@ -198,7 +198,7 @@ func runServer(cmd *cobra.Command, args []string) error {
 	// Initialize REST API
 	if cfg.Server.HTTP.Enabled {
 		log.Info("initializing REST API")
-		restHandler := handler.NewHandler(blockRepo, transactionRepo, chainRepo, nil, gapRecoveryMap, log)
+		restHandler := handler.NewHandler(blockRepo, transactionRepo, chainRepo, nil, gapRecoveryMap, statsCollector, log)
 		restRouter := rest.NewRouter(restHandler, log)
 		httpMux.Handle("/api/", http.StripPrefix("/api", restRouter))
 		log.Info("REST API registered at /api/*")
@@ -246,6 +246,7 @@ func runServer(cmd *cobra.Command, args []string) error {
 			TransactionRepo:  transactionRepo,
 			ChainRepo:        chainRepo,
 			GapRecovery:      gapRecoveryMap,
+			StatsCollector:   statsCollector,
 			EventBus:         eventBus,
 			EnableReflection: true,
 		})

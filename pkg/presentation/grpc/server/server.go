@@ -10,6 +10,7 @@ import (
 
 	indexerv1 "github.com/sage-x-project/blockchain-indexer/api/proto/indexer/v1"
 	"github.com/sage-x-project/blockchain-indexer/pkg/application/indexer"
+	"github.com/sage-x-project/blockchain-indexer/pkg/application/statistics"
 	"github.com/sage-x-project/blockchain-indexer/pkg/domain/repository"
 	"github.com/sage-x-project/blockchain-indexer/pkg/infrastructure/event"
 )
@@ -24,6 +25,7 @@ type Server struct {
 	transactionRepo  repository.TransactionRepository
 	chainRepo        repository.ChainRepository
 	gapRecovery      map[string]*indexer.GapRecovery
+	statsCollector   *statistics.Collector
 	eventBus         event.EventBus
 	port             int
 }
@@ -35,6 +37,7 @@ type Config struct {
 	TransactionRepo  repository.TransactionRepository
 	ChainRepo        repository.ChainRepository
 	GapRecovery      map[string]*indexer.GapRecovery
+	StatsCollector   *statistics.Collector
 	EventBus         event.EventBus
 	EnableReflection bool
 }
@@ -62,6 +65,7 @@ func NewServer(cfg Config) (*Server, error) {
 		transactionRepo: cfg.TransactionRepo,
 		chainRepo:       cfg.ChainRepo,
 		gapRecovery:     cfg.GapRecovery,
+		statsCollector:  cfg.StatsCollector,
 		eventBus:        cfg.EventBus,
 		port:            cfg.Port,
 	}

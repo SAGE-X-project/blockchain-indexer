@@ -84,9 +84,29 @@ func (r *Resolver) Chain(ctx context.Context, chainID string) (*gql.Chain, error
 
 // Chains resolves all chains
 func (r *Resolver) Chains(ctx context.Context) ([]*gql.Chain, error) {
-	// For now, return empty list as we don't have ListChains method
-	// TODO: Implement ListChains in repository
-	return []*gql.Chain{}, nil
+	chains, err := r.chainRepo.GetAllChains(ctx)
+	if err != nil {
+		r.logger.Error("failed to get chains", zap.Error(err))
+		return nil, fmt.Errorf("failed to get chains: %w", err)
+	}
+
+	result := make([]*gql.Chain, len(chains))
+	for i, chain := range chains {
+		result[i] = &gql.Chain{
+			ChainID:            chain.ChainID,
+			ChainType:          gql.ChainType(chain.ChainType),
+			Name:               chain.Name,
+			Network:            chain.Network,
+			Status:             gql.ChainStatus(chain.Status),
+			StartBlock:         gql.BigInt(fmt.Sprintf("%d", chain.StartBlock)),
+			LatestIndexedBlock: gql.BigInt(fmt.Sprintf("%d", chain.LatestIndexedBlock)),
+			LatestChainBlock:   gql.BigInt(fmt.Sprintf("%d", chain.LatestChainBlock)),
+			LastUpdated:        gql.Time(chain.LastUpdated),
+		}
+	}
+
+	r.logger.Debug("resolved chains query", zap.Int("chain_count", len(result)))
+	return result, nil
 }
 
 // Block resolves a single block by number

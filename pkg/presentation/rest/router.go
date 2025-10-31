@@ -45,6 +45,7 @@ func NewRouter(h *handler.Handler, logger *logger.Logger) chi.Router {
 	r.Route("/api/v1", func(r chi.Router) {
 		// Chain routes
 		r.Route("/chains", func(r chi.Router) {
+			r.Get("/", h.ListChains)
 			r.Get("/{chainID}", h.GetChain)
 		})
 
@@ -72,6 +73,12 @@ func NewRouter(h *handler.Handler, logger *logger.Logger) chi.Router {
 		r.Route("/chains/{chainID}/gaps", func(r chi.Router) {
 			r.Get("/", h.GetChainGaps)
 		})
+
+		// Statistics routes
+		r.Route("/chains/{chainID}/stats", func(r chi.Router) {
+			r.Get("/", h.GetChainStats)
+		})
+		r.Get("/stats", h.GetGlobalStats)
 	})
 
 	return r

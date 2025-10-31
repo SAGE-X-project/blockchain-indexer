@@ -322,20 +322,49 @@ func (s *Server) ListGaps(ctx context.Context, req *indexerv1.ListGapsRequest) (
 	}, nil
 }
 
-// GetStats retrieves statistics for a chain (not implemented yet)
+// GetStats retrieves statistics for a chain
 func (s *Server) GetStats(ctx context.Context, req *indexerv1.GetStatsRequest) (*indexerv1.GetStatsResponse, error) {
 	if req.ChainId == "" {
 		return nil, status.Error(codes.InvalidArgument, "chain_id is required")
 	}
 
-	// TODO: Implement statistics calculation
+	// Check if stats collector is available
+	if s.statsCollector == nil {
+		return &indexerv1.GetStatsResponse{
+			Stats: &indexerv1.Stats{
+				TotalBlocks:       0,
+				TotalTransactions: 0,
+				ChainsIndexed:     0,
+				AverageBlockTime:  0,
+				AverageTxPerBlock: 0,
+			},
+		}, nil
+	}
+
+	// Get chain statistics
+	stats, err := s.statsCollector.GetChainStatistics(ctx, req.ChainId)
+	if err != nil {
+		if err == repository.ErrNotFound {
+			return &indexerv1.GetStatsResponse{
+				Stats: &indexerv1.Stats{
+					TotalBlocks:       0,
+					TotalTransactions: 0,
+					ChainsIndexed:     0,
+					AverageBlockTime:  0,
+					AverageTxPerBlock: 0,
+				},
+			}, nil
+		}
+		return nil, status.Errorf(codes.Internal, "failed to get statistics: %v", err)
+	}
+
 	return &indexerv1.GetStatsResponse{
 		Stats: &indexerv1.Stats{
-			TotalBlocks:       0,
-			TotalTransactions: 0,
-			ChainsIndexed:     0,
-			AverageBlockTime:  0,
-			AverageTxPerBlock: 0,
+			TotalBlocks:       stats.TotalBlocks,
+			TotalTransactions: stats.TotalTransactions,
+			ChainsIndexed:     1,
+			AverageBlockTime:  stats.AverageBlockTime,
+			AverageTxPerBlock: stats.AverageTxPerBlock,
 		},
 	}, nil
 }
