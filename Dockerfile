@@ -25,7 +25,7 @@ RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo \
     -o /build/bin/indexer ./cmd/indexer
 
 # Stage 2: Runtime
-FROM alpine:3.18
+FROM alpine:3.22
 
 # Install runtime dependencies
 RUN apk add --no-cache ca-certificates tzdata
