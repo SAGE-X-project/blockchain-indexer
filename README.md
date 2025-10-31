@@ -6,8 +6,7 @@
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Architecture](https://img.shields.io/badge/Architecture-Clean-success)](docs/ARCHITECTURE.md)
 
-**blockchain-indexer**는 멀티체인을 지원하는 확장 가능한 블록체인 인덱서입니다. EVM, Solana, Cosmos, Polkadot, Avalanche, Ripple 등 다양한 블록체인의 블록 및 트랜잭션 데이터를 인덱싱하고, GraphQL, gRPC, REST API를 통해 제공합니다.
-
+**blockchain-indexer** is a scalable multi-chain blockchain indexer that indexes block and transaction data from various blockchains including EVM, Solana, Cosmos, Polkadot, Avalanche, and Ripple, and provides access through GraphQL, gRPC, and REST APIs.
 ---
 
 ## Features
@@ -203,7 +202,6 @@ The project includes:
 - Advanced features including real-time statistics, gap detection, and monitoring
 
 **Current Version**: 1.0.0-rc1
-**Status**: Production ready
 
 ---
 
@@ -212,8 +210,6 @@ The project includes:
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
-
-**Status**: Production Ready (Phase 9 Complete - Fully Operational)
 
 **Current Version**: 1.0.0-rc1
 
