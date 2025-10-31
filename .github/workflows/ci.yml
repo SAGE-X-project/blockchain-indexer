@@ -181,7 +181,7 @@ jobs:
           GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} go build -o bin/${BINARY_NAME} ./cmd/indexer
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: indexer-${{ matrix.os }}-${{ matrix.arch }}
           path: bin/
