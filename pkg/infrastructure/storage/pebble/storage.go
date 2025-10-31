@@ -53,6 +53,33 @@ func DefaultConfig(path string) *Config {
 	}
 }
 
+// HighPerformanceConfig returns a configuration optimized for high performance
+// Recommended for systems with ample memory and fast storage
+func HighPerformanceConfig(path string) *Config {
+	return &Config{
+		Path:             path,
+		CacheSize:        256 << 20, // 256MB - larger cache for better read performance
+		MaxOpenFiles:     5000,      // More open files for concurrent access
+		WriteBufferSize:  128 << 20, // 128MB - larger buffer for write throughput
+		MaxConcurrentMem: 4,         // More memtables for write concurrency
+		DisableWAL:       false,
+		BytesPerSync:     1 << 20, // 1MB - less frequent sync for better write performance
+	}
+}
+
+// LowMemoryConfig returns a configuration for memory-constrained environments
+func LowMemoryConfig(path string) *Config {
+	return &Config{
+		Path:             path,
+		CacheSize:        16 << 20, // 16MB
+		MaxOpenFiles:     100,
+		WriteBufferSize:  16 << 20, // 16MB
+		MaxConcurrentMem: 1,
+		DisableWAL:       false,
+		BytesPerSync:     256 << 10, // 256KB
+	}
+}
+
 // NewStorage creates a new PebbleDB storage instance
 func NewStorage(config *Config) (*PebbleStorage, error) {
 	if config == nil {
