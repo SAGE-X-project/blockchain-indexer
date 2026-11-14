@@ -1,6 +1,6 @@
 # Multi-stage build for blockchain indexer
 # Stage 1: Build
-FROM golang:1.21-alpine AS builder
+FROM golang:1.26.11-alpine@sha256:ae52b5bc6ed045a9ed26ab03dc19327a802a9cc9aa8b27ed57f5c6b60579b0bb AS builder
 
 # Install build dependencies
 RUN apk add --no-cache git make gcc musl-dev
@@ -25,7 +25,7 @@ RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo \
     -o /build/bin/indexer ./cmd/indexer
 
 # Stage 2: Runtime
-FROM alpine:3.18
+FROM alpine:3.24.2@sha256:294b683cb724975bec92580e1e685676bd4b50bda910ddb8c51d4cabeaec77e6
 
 # Install runtime dependencies
 RUN apk add --no-cache ca-certificates tzdata
